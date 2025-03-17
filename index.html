@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mobile Audio Recorder</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px;
+            padding: 0;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            width: 70px;
+            height: 70px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        #record {
+            background: red;
+            color: white;
+        }
+        #play {
+            background: green;
+            color: white;
+        }
+        #save {
+            background: black;
+            color: white;
+        }
+        #status {
+            margin: 15px 0;
+            font-style: italic;
+            color: #555;
+            height: 20px;
+        }
+        audio {
+            width: 100%;
+            margin-top: 15px;
+            display: block;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .debug {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Recorder</h1>
+    
+    <div class="controls">
+        <button id="record">●</button>
+        <button id="play" disabled>▶</button>
+        <button id="save" disabled>💾</button>
+    </div>
+    
+    <div id="status">Ready to record</div>
+    
+    <audio id="audioPlayer" controls></audio>
+    
+    <div class="debug" id="debug"></div>
+    
+    <script>
+        // DOM elements
+        const recordBtn = document.getElementById('record');
+        const playBtn = document.getElementById('play');
+        const saveBtn = document.getElementById('save');
+        const statusDiv = document.getElementById('status');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const debugDiv = document.getElementById('debug');
+        
+        // Global variables
+        let mediaRecorder;
+        let audioChunks = [];
+        let recordingUrl = null;
+        let stream = null;
+        
+        // Debug logging
+        function log(message) {
+            console.log(message);
+            debugDiv.textContent += message + "\n";
+        }
+        
+        // Initialize app
+        async function init() {
+            try {
+                // Get audio stream with explicit constraints for better mobile compatibility
+                const constraints = {
+                    audio: {
+                        echoCancellation: false,
+                        noiseSuppression: false,
+                        autoGainControl: false
+                    }
+                };
+                
+                stream = await navigator.mediaDevices.getUserMedia(constraints);
+                log("Got audio stream");
+                
+                // Check for available MIME types
+                let mimeType = 'audio/webm';
+                if (MediaRecorder.isTypeSupported('audio/mp4')) {
+                    mimeType = 'audio/mp4';
+                    log("Using MP4 format");
+                } else {
+                    log("Using WebM format");
+                }
+                
+                // Create MediaRecorder with appropriate settings
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: mimeType,
+                    audioBitsPerSecond: 128000
+                });
+                
+                // Set up event handlers
+                mediaRecorder.ondataavailable = handleDataAvailable;
+                mediaRecorder.onstop = handleRecordingStop;
+                
+                log("MediaRecorder created");
+                statusDiv.textContent = "Ready to record";
+                
+                // Set up button handlers
+                recordBtn.addEventListener('click', toggleRecording);
+                playBtn.addEventListener('click', playRecording);
+                saveBtn.addEventListener('click', saveRecording);
+            } catch (error) {
+                log("Error initializing: " + error.message);
+                statusDiv.textContent = "Error: " + error.message;
+            }
+        }
+        
+        // Handle recorded data chunks
+        function handleDataAvailable(event) {
+            if (event.data && event.data.size > 0) {
+                audioChunks.push(event.data);
+                log(`Got chunk: ${event.data.size} bytes`);
+            }
+        }
+        
+        // Handle recording completion
+        function handleRecordingStop() {
+            log(`Recording stopped, got ${audioChunks.length} chunks`);
+            
+            // Get MIME type from the MediaRecorder
+            const mimeType = mediaRecorder.mimeType;
+            log(`Using MIME type: ${mimeType}`);
+            
+            // Create blob from chunks
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            log(`Created blob: ${audioBlob.size} bytes`);
+            
+            // Clean up previous URL
+            if (recordingUrl) {
+                URL.revokeObjectURL(recordingUrl);
+            }
+            
+            // Create and set URL
+            recordingUrl = URL.createObjectURL(audioBlob);
+            audioPlayer.src = recordingUrl;
+            
+            // Enable buttons
+            playBtn.disabled = false;
+            saveBtn.disabled = false;
+            
+            statusDiv.textContent = "Recording ready";
+        }
+        
+        // Toggle recording state
+			function toggleRecording() {
+				if (mediaRecorder.state === 'inactive') {
+					// Make sure microphone is active before starting
+					restartMicrophone().then(() => {
+						// Start recording
+						audioChunks = [];
+						mediaRecorder.start(100); // Collect data frequently
+						recordBtn.style.background = 'darkred';
+						statusDiv.textContent = "Recording...";
+						log("Recording started");
+						
+						// Disable buttons
+						playBtn.disabled = true;
+						saveBtn.disabled = true;
+						
+						// Clear player
+						audioPlayer.src = '';
+					}).catch(error => {
+						statusDiv.textContent = "Microphone error: " + error.message;
+						log("Error getting microphone: " + error.message);
+					});
+				} else {
+					// Stop recording
+					mediaRecorder.stop();
+					recordBtn.style.background = 'red';
+					log("Recording stopped");
+					
+					// Stop microphone access
+					stopMicrophone();
+				}
+			}
+        
+        // Stop microphone access
+        function stopMicrophone() {
+            if (stream) {
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                });
+            }
+        }
+        
+        // Restart microphone access
+		async function restartMicrophone() {
+			try {
+				stopMicrophone();
+				
+				// Get fresh stream
+				stream = await navigator.mediaDevices.getUserMedia({
+					audio: {
+						echoCancellation: false,
+						noiseSuppression: false,
+						autoGainControl: false
+					}
+				});
+				
+				// Update MediaRecorder
+				const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+				mediaRecorder = new MediaRecorder(stream, {
+					mimeType: mimeType,
+					audioBitsPerSecond: 128000
+				});
+				mediaRecorder.ondataavailable = handleDataAvailable;
+				mediaRecorder.onstop = handleRecordingStop;
+				
+				log("Microphone restarted");
+				return Promise.resolve(); // Explicitly return resolved promise
+			} catch (error) {
+				log("Error restarting microphone: " + error.message);
+				return Promise.reject(error); // Return rejected promise on error
+			}
+		}
+        
+        // Play recording
+        function playRecording() {
+            if (audioPlayer.src) {
+                audioPlayer.play()
+                    .then(() => {
+                        statusDiv.textContent = "Playing...";
+                        log("Playback started");
+                    })
+                    .catch(error => {
+                        statusDiv.textContent = "Use player controls to play";
+                        log("Playback error: " + error.message);
+                    });
+            }
+        }
+        
+        // Save recording
+        function saveRecording() {
+            if (recordingUrl) {
+                const extension = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+                
+                try {
+                    const link = document.createElement('a');
+                    link.href = recordingUrl;
+                    link.download = `recording_${Date.now()}.${extension}`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    statusDiv.textContent = "Saving... (check downloads)";
+                    log("Download initiated");
+                } catch (e) {
+                    statusDiv.textContent = "Long-press audio player to save";
+                    log("Save error: " + e.message);
+                }
+            }
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            debugDiv.textContent = ""; // Clear debug area
+            init();
+        });
+    </script>
+</body>
+</html>
