@@ -27,5 +27,5 @@ It allows users to **record, play, and save audio recordings** in the browser.
 ## 📦 Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/mobile-audio-recorder.git
-   cd mobile-audio-recorder
+   git clone https://github.com/didzislauva/diktofons.git
+   cd diktofons
