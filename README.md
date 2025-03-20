@@ -11,7 +11,8 @@ It allows users to **record, play, and save audio recordings** in the browser.
 ✅ **Basic debug logging** for troubleshooting  
 
 ## 📸 Screenshot
-![Mobile Audio Recorder](screenshot.png) *(Add a screenshot of the UI here)*
+![image](https://github.com/user-attachments/assets/9344cc08-3732-433a-829e-97b7a69ec696)
+*(Add a screenshot of the UI here)*
 
 ## 🎯 How to Use
 1. **Click the 🔴 record button** to start recording.
@@ -29,3 +30,4 @@ It allows users to **record, play, and save audio recordings** in the browser.
    ```sh
    git clone https://github.com/didzislauva/diktofons.git
    cd diktofons
+https://didzislauva.github.io/diktofons/
