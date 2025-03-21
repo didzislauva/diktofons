@@ -1,5 +1,6 @@
 const screen = document.getElementById('screen');
 const shape = document.getElementById('shape');
+const label = document.getElementById('label'); // <-- Add this line
 const audioPlayer = document.getElementById('audioPlayer');
 
 let mediaRecorder;
@@ -7,6 +8,7 @@ let audioChunks = [];
 let recordingUrl = null;
 let stream = null;
 let isPlaying = false;
+let pulseInterval = null;
 
 // Initialize MediaRecorder
 async function setupRecorder() {
@@ -35,13 +37,23 @@ function showIdle() {
 
 // Switch to recording state
 function showRecording() {
-  screen.className = 'state-recording';
+  screen.className = 'state-recording pulse-1';
   shape.style.display = 'block';
+
+
+  // Start pulsing
+  let pulseState = 1;
+   pulseInterval = setInterval(() => {
+    pulseState = pulseState === 1 ? 2 : 1;
+    screen.classList.remove(`pulse-${pulseState === 1 ? 2 : 1}`);
+    screen.classList.add(`pulse-${pulseState}`);
+  }, 600);; // change every 600ms
 }
 
 // Show 3-part menu
 function showMenu() {
   screen.className = 'state-menu';
+  screen.style.backgroundColor = '';
   shape.style.display = 'none';
 
   screen.innerHTML = `
@@ -76,11 +88,22 @@ function startRecording() {
 function stopRecording() {
   mediaRecorder.stop();
   stream.getTracks().forEach(track => track.stop());
+  
+   if (pulseInterval) {
+    clearInterval(pulseInterval);
+    pulseInterval = null;
+  }
 }
 
 // Start new recording from menu
 function startNewRecording() {
-  screen.innerHTML = '';
+  screen.style.backgroundColor = '';
+  screen.innerHTML = ''; // clear old menu content
+
+  // Re-add shape and label elements
+  screen.appendChild(shape);
+  screen.appendChild(label);
+
   setupRecorder().then(startRecording);
 }
 
@@ -115,11 +138,10 @@ function saveRecording() {
   a.click();
   document.body.removeChild(a);
   
-  // ✅ Remove the save section after saving
+
   const saveSection = document.getElementById('section-save');
   if (saveSection) saveSection.remove();
 
-  // ✅ Resize record and play sections to each take 50%
   const recordSection = document.getElementById('section-record');
   const playSection = document.getElementById('section-play');
   if (recordSection && playSection) {

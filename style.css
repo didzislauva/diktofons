@@ -137,3 +137,22 @@ html, body {
 .shape-square {
   background-color: white;
 }
+
+/* Recording pulse states */
+.state-recording.pulse-1 {
+  background-color: red;
+}
+
+.state-recording.pulse-1 #shape {
+  background-color: darkred;
+  border-radius: 50%;
+}
+
+.state-recording.pulse-2 {
+  background-color: darkred;
+}
+
+.state-recording.pulse-2 #shape {
+  background-color: red;
+  border-radius: 50%;
+}
