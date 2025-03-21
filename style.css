@@ -8,7 +8,7 @@ html, body {
 
 #screen {
   width: 100vw;
-  height: 100vh;
+  height: 100dvh;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -52,7 +52,6 @@ html, body {
 
 .state-recording #label {
   color: white;
-  content: "STOP";
 }
 
 .state-menu {
@@ -61,7 +60,8 @@ html, body {
 }
 
 .state-playing {
-  background-color: gray;
+  background-color: green;
+  flex-direction: column;
 }
 
 /* --- Menu Sections --- */
@@ -94,7 +94,6 @@ html, body {
   margin-top: 15px;
 }
 
-/* Menu section labels */
 .state-menu .menu-label-play {
   font-size: 32px;
   font-weight: bold;
@@ -102,7 +101,6 @@ html, body {
   margin-top: 15px;
 }
 
-/* Menu section labels */
 .state-menu .menu-label-save {
   font-size: 32px;
   font-weight: bold;
@@ -163,38 +161,6 @@ html, body {
 
 .state-recording.pulse-2 #label {
   color: red;
-}
-
-.state-playing {
-  background-color: green;
-  flex-direction: column;
-}
-
-.state-playing #shape {
-  width: 0;
-  height: 0;
-  border-left: 60px solid white;
-  border-top: 40px solid transparent;
-  border-bottom: 40px solid transparent;
-  background: none;
-  margin-bottom: 20px;
-}
-
-.state-playing #label {
-  font-size: 36px;
-  color: white;
-  font-weight: bold;
-}
-
-/* Visual triangle */
-.play-icon {
-  width: 0;
-  height: 0;
-  border-left: 60px solid white;
-  border-top: 40px solid transparent;
-  border-bottom: 40px solid transparent;
-  background: none;
-  margin-bottom: 20px;
 }
 
 /* Visual square */
