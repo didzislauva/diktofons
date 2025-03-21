@@ -156,3 +156,51 @@ html, body {
   background-color: red;
   border-radius: 50%;
 }
+
+.state-recording.pulse-1 #label {
+  color: darkred;
+}
+
+.state-recording.pulse-2 #label {
+  color: red;
+}
+
+.state-playing {
+  background-color: green;
+  flex-direction: column;
+}
+
+.state-playing #shape {
+  width: 0;
+  height: 0;
+  border-left: 60px solid white;
+  border-top: 40px solid transparent;
+  border-bottom: 40px solid transparent;
+  background: none;
+  margin-bottom: 20px;
+}
+
+.state-playing #label {
+  font-size: 36px;
+  color: white;
+  font-weight: bold;
+}
+
+/* Visual triangle */
+.play-icon {
+  width: 0;
+  height: 0;
+  border-left: 60px solid white;
+  border-top: 40px solid transparent;
+  border-bottom: 40px solid transparent;
+  background: none;
+  margin-bottom: 20px;
+}
+
+/* Visual square */
+.stop-icon {
+  width: 60px;
+  height: 60px;
+  background-color: white;
+  margin-bottom: 20px;
+}

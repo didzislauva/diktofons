@@ -1,6 +1,6 @@
 const screen = document.getElementById('screen');
 const shape = document.getElementById('shape');
-const label = document.getElementById('label'); // <-- Add this line
+const label = document.getElementById('label');
 const audioPlayer = document.getElementById('audioPlayer');
 
 let mediaRecorder;
@@ -33,28 +33,35 @@ async function setupRecorder() {
 function showIdle() {
   screen.className = 'state-idle';
   shape.style.display = 'block';
+  label.textContent = 'RECORD';
+  label.style.display = 'block';
 }
 
 // Switch to recording state
 function showRecording() {
   screen.className = 'state-recording pulse-1';
   shape.style.display = 'block';
-
+  label.textContent = 'STOP';
 
   // Start pulsing
   let pulseState = 1;
-   pulseInterval = setInterval(() => {
+  pulseInterval = setInterval(() => {
     pulseState = pulseState === 1 ? 2 : 1;
     screen.classList.remove(`pulse-${pulseState === 1 ? 2 : 1}`);
     screen.classList.add(`pulse-${pulseState}`);
-  }, 600);; // change every 600ms
+  }, 600); // change every 600ms
 }
 
 // Show 3-part menu
 function showMenu() {
+  // Remove all event listeners by cloning the screen element
+  const newScreen = screen.cloneNode(false);
+  while (screen.firstChild) {
+    screen.removeChild(screen.firstChild);
+  }
+  
   screen.className = 'state-menu';
   screen.style.backgroundColor = '';
-  shape.style.display = 'none';
 
   screen.innerHTML = `
     <div id="section-record">
@@ -73,7 +80,7 @@ function showMenu() {
 
   // Event listeners
   document.getElementById('section-record').addEventListener('click', startNewRecording);
-  document.getElementById('section-play').addEventListener('click', togglePlayback);
+  document.getElementById('section-play').addEventListener('click', startPlayback);
   document.getElementById('section-save').addEventListener('click', saveRecording);
 }
 
@@ -89,47 +96,105 @@ function stopRecording() {
   mediaRecorder.stop();
   stream.getTracks().forEach(track => track.stop());
   
-   if (pulseInterval) {
+  if (pulseInterval) {
     clearInterval(pulseInterval);
     pulseInterval = null;
   }
 }
 
 // Start new recording from menu
-function startNewRecording() {
-  screen.style.backgroundColor = '';
-  screen.innerHTML = ''; // clear old menu content
-
-  // Re-add shape and label elements
+function startNewRecording(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  // Clear screen content
+  while (screen.firstChild) {
+    screen.removeChild(screen.firstChild);
+  }
+  
+  // Add back the shape and label
   screen.appendChild(shape);
   screen.appendChild(label);
-
+  
+  screen.className = 'state-recording pulse-1';
+  shape.style.display = 'block';
+  shape.className = ''; // Reset any custom classes
+  label.style.display = 'block';
+  label.textContent = 'STOP';
+  
   setupRecorder().then(startRecording);
 }
 
-// Playback toggle
-function togglePlayback() {
-  const playSection = document.getElementById('section-play');
+// Start playback and show square icon
+function startPlayback(event) {
   if (!recordingUrl) return;
-
-  if (isPlaying) {
-    audioPlayer.pause();
-    playSection.classList.remove('playing');
-    isPlaying = false;
-  } else {
-    audioPlayer.play();
-    playSection.classList.add('playing');
-    isPlaying = true;
-    audioPlayer.onended = () => {
-      playSection.classList.remove('playing');
-      isPlaying = false;
-    };
+  
+  // Prevent event bubbling
+  if (event) {
+    event.stopPropagation();
   }
+  
+  isPlaying = true;
+
+  // Clear screen content
+  while (screen.firstChild) {
+    screen.removeChild(screen.firstChild);
+  }
+  
+  screen.className = 'state-playing';
+  
+  // Create and append stop icon (square)
+  const stopIcon = document.createElement('div');
+  stopIcon.className = 'stop-icon';
+  stopIcon.id = 'playback-control';
+  
+  // Create and append label
+  const playingLabel = document.createElement('div');
+  playingLabel.textContent = 'PLAYING';
+  playingLabel.style.fontSize = '36px';
+  playingLabel.style.color = 'white';
+  playingLabel.style.fontWeight = 'bold';
+  
+  screen.appendChild(stopIcon);
+  screen.appendChild(playingLabel);
+  
+  // Play the audio
+  audioPlayer.play();
+  audioPlayer.onended = () => {
+    isPlaying = false;
+    showMenu();
+  };
+  
+  // Add click handler to the entire screen
+  screen.addEventListener('click', stopPlayback);
+}
+
+// Function to handle stopping playback
+function stopPlayback(event) {
+  // Prevent any event bubbling
+  if (event) {
+    event.stopPropagation();
+  }
+  
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+  isPlaying = false;
+  
+  // Remove the click listener
+  screen.removeEventListener('click', stopPlayback);
+  
+  showMenu();
 }
 
 // Save current recording
-function saveRecording() {
+function saveRecording(event) {
+  if (event) {
+    event.stopPropagation();
+  }
+  
   if (!recordingUrl) return;
+  
   const ext = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
   const a = document.createElement('a');
   a.href = recordingUrl;
@@ -138,7 +203,6 @@ function saveRecording() {
   a.click();
   document.body.removeChild(a);
   
-
   const saveSection = document.getElementById('section-save');
   if (saveSection) saveSection.remove();
 
