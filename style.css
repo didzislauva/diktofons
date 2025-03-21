@@ -87,10 +87,26 @@ html, body {
 }
 
 /* Menu section labels */
-.state-menu .menu-label {
+.state-menu .menu-label-record {
   font-size: 32px;
   font-weight: bold;
-  color: red;
+  color: darkred;
+  margin-top: 15px;
+}
+
+/* Menu section labels */
+.state-menu .menu-label-play {
+  font-size: 32px;
+  font-weight: bold;
+  color: lightgray;
+  margin-top: 15px;
+}
+
+/* Menu section labels */
+.state-menu .menu-label-save {
+  font-size: 32px;
+  font-weight: bold;
+  color: white;
   margin-top: 15px;
 }
 
@@ -111,7 +127,7 @@ html, body {
 .shape-triangle {
   width: 0;
   height: 0;
-  border-left: 50px solid red;
+  border-left: 50px solid lightgreen;
   border-top: 30px solid transparent;
   border-bottom: 30px solid transparent;
   background: none;
@@ -119,5 +135,5 @@ html, body {
 
 /* Square for save */
 .shape-square {
-  background-color: red;
+  background-color: white;
 }

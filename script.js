@@ -47,15 +47,15 @@ function showMenu() {
   screen.innerHTML = `
     <div id="section-record">
       <div class="menu-shape shape-circle"></div>
-      <div class="menu-label">RECORD</div>
+      <div class="menu-label-record">RECORD</div>
     </div>
     <div id="section-play">
       <div class="menu-shape shape-triangle"></div>
-      <div class="menu-label">PLAY</div>
+      <div class="menu-label-play">PLAY</div>
     </div>
     <div id="section-save">
       <div class="menu-shape shape-square"></div>
-      <div class="menu-label">SAVE</div>
+      <div class="menu-label-save">SAVE</div>
     </div>
   `;
 
@@ -80,6 +80,7 @@ function stopRecording() {
 
 // Start new recording from menu
 function startNewRecording() {
+  screen.innerHTML = '';
   setupRecorder().then(startRecording);
 }
 
@@ -113,6 +114,18 @@ function saveRecording() {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
+  
+  // ✅ Remove the save section after saving
+  const saveSection = document.getElementById('section-save');
+  if (saveSection) saveSection.remove();
+
+  // ✅ Resize record and play sections to each take 50%
+  const recordSection = document.getElementById('section-record');
+  const playSection = document.getElementById('section-play');
+  if (recordSection && playSection) {
+    recordSection.style.flex = '1';
+    playSection.style.flex = '1';
+  }
 }
 
 // Handle main tap logic
