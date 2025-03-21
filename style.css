@@ -3,6 +3,7 @@ html, body {
   padding: 0;
   height: 100%;
   overflow: hidden;
+  font-family: sans-serif;
 }
 
 #screen {
@@ -12,47 +13,65 @@ html, body {
   justify-content: center;
   align-items: center;
   transition: background 0.3s;
+  position: relative;
+  text-align: center;
 }
 
-/* State colors */
+#shape {
+  width: 100px;
+  height: 100px;
+  margin-bottom: 20px;
+}
+
+#label {
+  font-size: 36px;
+  color: red;
+  font-weight: bold;
+}
+
+/* --- States --- */
 .state-idle {
   background-color: red;
+  flex-direction: column;
+}
+
+.state-idle #shape {
+  background-color: darkred;
+  border-radius: 50%;
 }
 
 .state-recording {
   background-color: #333;
+  flex-direction: column;
+}
+
+.state-recording #shape {
+  background-color: black;
+  border-radius: 0;
+}
+
+.state-recording #label {
+  color: white;
+  content: "STOP";
 }
 
 .state-menu {
-  display: flex;
   flex-direction: column;
+  padding: 0;
 }
 
 .state-playing {
   background-color: gray;
 }
 
-/* Shape */
-#shape {
-  width: 100px;
-  height: 100px;
-}
-
-/* Circle (recording idle) */
-.state-idle #shape {
-  background-color: red;
-  border-radius: 50%;
-}
-
-/* Square (recording) */
-.state-recording #shape {
-  background-color: #111;
-}
-
-/* Menu: split sections */
+/* --- Menu Sections --- */
 .state-menu > div {
   flex: 1;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
 }
 
 #section-record {
@@ -67,6 +86,38 @@ html, body {
   background-color: black;
 }
 
-#section-play.playing {
-  background-color: gray;
+/* Menu section labels */
+.state-menu .menu-label {
+  font-size: 32px;
+  font-weight: bold;
+  color: red;
+  margin-top: 15px;
+}
+
+/* Shapes in menu */
+.menu-shape {
+  width: 100px;
+  height: 100px;
+  position: relative;
+}
+
+/* Circle for record */
+.shape-circle {
+  background-color: darkred;
+  border-radius: 50%;
+}
+
+/* Triangle for play */
+.shape-triangle {
+  width: 0;
+  height: 0;
+  border-left: 50px solid red;
+  border-top: 30px solid transparent;
+  border-bottom: 30px solid transparent;
+  background: none;
+}
+
+/* Square for save */
+.shape-square {
+  background-color: red;
 }

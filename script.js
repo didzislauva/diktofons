@@ -43,12 +43,23 @@ function showRecording() {
 function showMenu() {
   screen.className = 'state-menu';
   shape.style.display = 'none';
+
   screen.innerHTML = `
-    <div id="section-record"></div>
-    <div id="section-play"></div>
-    <div id="section-save"></div>
+    <div id="section-record">
+      <div class="menu-shape shape-circle"></div>
+      <div class="menu-label">RECORD</div>
+    </div>
+    <div id="section-play">
+      <div class="menu-shape shape-triangle"></div>
+      <div class="menu-label">PLAY</div>
+    </div>
+    <div id="section-save">
+      <div class="menu-shape shape-square"></div>
+      <div class="menu-label">SAVE</div>
+    </div>
   `;
 
+  // Event listeners
   document.getElementById('section-record').addEventListener('click', startNewRecording);
   document.getElementById('section-play').addEventListener('click', togglePlayback);
   document.getElementById('section-save').addEventListener('click', saveRecording);
