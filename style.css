@@ -1,58 +1,72 @@
-body {
-    text-align: center;
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    margin: 20px;
-    padding: 0;
-    max-width: 500px;
-    margin: 0 auto;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
 }
-h1 {
-    font-size: 24px;
-    margin-bottom: 20px;
+
+#screen {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background 0.3s;
 }
-.controls {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 20px;
+
+/* State colors */
+.state-idle {
+  background-color: red;
 }
-button {
-    width: 70px;
-    height: 70px;
-    border: none;
-    border-radius: 50%;
-    cursor: pointer;
-    font-size: 16px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+
+.state-recording {
+  background-color: #333;
 }
-#record {
-    background: red;
-    color: white;
+
+.state-menu {
+  display: flex;
+  flex-direction: column;
 }
-#play {
-    background: green;
-    color: white;
+
+.state-playing {
+  background-color: gray;
 }
-#save {
-    background: black;
-    color: white;
+
+/* Shape */
+#shape {
+  width: 100px;
+  height: 100px;
 }
-#status {
-    margin: 15px 0;
-    font-style: italic;
-    color: #555;
-    height: 20px;
+
+/* Circle (recording idle) */
+.state-idle #shape {
+  background-color: red;
+  border-radius: 50%;
 }
-audio {
-    width: 100%;
-    margin-top: 15px;
-    display: block;
+
+/* Square (recording) */
+.state-recording #shape {
+  background-color: #111;
 }
-button:active {
-    transform: scale(0.95);
+
+/* Menu: split sections */
+.state-menu > div {
+  flex: 1;
+  width: 100%;
 }
-.debug {
-    margin-top: 20px;
-    font-size: 12px;
-    color: #666;
+
+#section-record {
+  background-color: red;
+}
+
+#section-play {
+  background-color: green;
+}
+
+#section-save {
+  background-color: black;
+}
+
+#section-play.playing {
+  background-color: gray;
 }

@@ -1,26 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mobile Audio Recorder</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Accessible Recorder</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-    <h1>Audio Recorder</h1>
-    
-    <div class="controls">
-        <button id="record">●</button>
-        <button id="play" disabled>▶</button>
-        <button id="save" disabled>💾</button>
-    </div>
-    
-    <div id="status">Ready to record</div>
-    
-    <audio id="audioPlayer" controls></audio>
-    
-    <div class="debug" id="debug"></div>
+  <div id="screen" class="state-idle">
+    <div id="shape"></div>
+  </div>
 
-    <script src="script.js"></script>
+  <audio id="audioPlayer" hidden></audio>
+
+  <script src="script.js"></script>
 </body>
 </html>

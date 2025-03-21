@@ -1,187 +1,117 @@
-// DOM elements
-const recordBtn = document.getElementById('record');
-const playBtn = document.getElementById('play');
-const saveBtn = document.getElementById('save');
-const statusDiv = document.getElementById('status');
+const screen = document.getElementById('screen');
+const shape = document.getElementById('shape');
 const audioPlayer = document.getElementById('audioPlayer');
-const debugDiv = document.getElementById('debug');
 
-// Global variables
 let mediaRecorder;
 let audioChunks = [];
 let recordingUrl = null;
 let stream = null;
+let isPlaying = false;
 
-// Debug logging
-function log(message) {
-    console.log(message);
-    debugDiv.textContent += message + "\n";
-}
+// Initialize MediaRecorder
+async function setupRecorder() {
+  stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
+  mediaRecorder = new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 128000 });
 
-// Initialize app
-async function init() {
-    try {
-        const constraints = {
-            audio: {
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGainControl: false
-            }
-        };
+  mediaRecorder.ondataavailable = e => {
+    if (e.data.size > 0) audioChunks.push(e.data);
+  };
 
-        stream = await navigator.mediaDevices.getUserMedia(constraints);
-        log("Got audio stream");
-
-        let mimeType = 'audio/webm';
-        if (MediaRecorder.isTypeSupported('audio/mp4')) {
-            mimeType = 'audio/mp4';
-            log("Using MP4 format");
-        } else {
-            log("Using WebM format");
-        }
-
-        mediaRecorder = new MediaRecorder(stream, {
-            mimeType: mimeType,
-            audioBitsPerSecond: 128000
-        });
-
-        mediaRecorder.ondataavailable = handleDataAvailable;
-        mediaRecorder.onstop = handleRecordingStop;
-
-        log("MediaRecorder created");
-        statusDiv.textContent = "Ready to record";
-
-        recordBtn.addEventListener('click', toggleRecording);
-        playBtn.addEventListener('click', playRecording);
-        saveBtn.addEventListener('click', saveRecording);
-    } catch (error) {
-        log("Error initializing: " + error.message);
-        statusDiv.textContent = "Error: " + error.message;
-    }
-}
-
-function handleDataAvailable(event) {
-    if (event.data && event.data.size > 0) {
-        audioChunks.push(event.data);
-        log(`Got chunk: ${event.data.size} bytes`);
-    }
-}
-
-function handleRecordingStop() {
-    log(`Recording stopped, got ${audioChunks.length} chunks`);
-    const mimeType = mediaRecorder.mimeType;
-    log(`Using MIME type: ${mimeType}`);
-    const audioBlob = new Blob(audioChunks, { type: mimeType });
-    log(`Created blob: ${audioBlob.size} bytes`);
-
-    if (recordingUrl) {
-        URL.revokeObjectURL(recordingUrl);
-    }
-
-    recordingUrl = URL.createObjectURL(audioBlob);
+  mediaRecorder.onstop = () => {
+    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType });
+    if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    recordingUrl = URL.createObjectURL(blob);
     audioPlayer.src = recordingUrl;
-
-    playBtn.disabled = false;
-    saveBtn.disabled = false;
-    statusDiv.textContent = "Recording ready";
+    showMenu();
+  };
 }
 
-function toggleRecording() {
-    if (mediaRecorder.state === 'inactive') {
-        restartMicrophone().then(() => {
-            audioChunks = [];
-            mediaRecorder.start(100);
-            recordBtn.style.background = 'darkred';
-            statusDiv.textContent = "Recording...";
-            log("Recording started");
-
-            playBtn.disabled = true;
-            saveBtn.disabled = true;
-            audioPlayer.src = '';
-        }).catch(error => {
-            statusDiv.textContent = "Microphone error: " + error.message;
-            log("Error getting microphone: " + error.message);
-        });
-    } else {
-        mediaRecorder.stop();
-        recordBtn.style.background = 'red';
-        log("Recording stopped");
-        stopMicrophone();
-    }
+// Switch to idle recording state
+function showIdle() {
+  screen.className = 'state-idle';
+  shape.style.display = 'block';
 }
 
-function stopMicrophone() {
-    if (stream) {
-        stream.getTracks().forEach(track => {
-            track.stop();
-        });
-    }
+// Switch to recording state
+function showRecording() {
+  screen.className = 'state-recording';
+  shape.style.display = 'block';
 }
 
-async function restartMicrophone() {
-    try {
-        stopMicrophone();
+// Show 3-part menu
+function showMenu() {
+  screen.className = 'state-menu';
+  shape.style.display = 'none';
+  screen.innerHTML = `
+    <div id="section-record"></div>
+    <div id="section-play"></div>
+    <div id="section-save"></div>
+  `;
 
-        stream = await navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: false,
-                noiseSuppression: false,
-                autoGainControl: false
-            }
-        });
-
-        const mimeType = MediaRecorder.isTypeSupported('audio/mp4') ? 'audio/mp4' : 'audio/webm';
-        mediaRecorder = new MediaRecorder(stream, {
-            mimeType: mimeType,
-            audioBitsPerSecond: 128000
-        });
-        mediaRecorder.ondataavailable = handleDataAvailable;
-        mediaRecorder.onstop = handleRecordingStop;
-
-        log("Microphone restarted");
-        return Promise.resolve();
-    } catch (error) {
-        log("Error restarting microphone: " + error.message);
-        return Promise.reject(error);
-    }
+  document.getElementById('section-record').addEventListener('click', startNewRecording);
+  document.getElementById('section-play').addEventListener('click', togglePlayback);
+  document.getElementById('section-save').addEventListener('click', saveRecording);
 }
 
-function playRecording() {
-    if (audioPlayer.src) {
-        audioPlayer.play()
-            .then(() => {
-                statusDiv.textContent = "Playing...";
-                log("Playback started");
-            })
-            .catch(error => {
-                statusDiv.textContent = "Use player controls to play";
-                log("Playback error: " + error.message);
-            });
-    }
+// Handle first tap: Start recording
+function startRecording() {
+  audioChunks = [];
+  mediaRecorder.start(100);
+  showRecording();
 }
 
+// Stop and prepare menu
+function stopRecording() {
+  mediaRecorder.stop();
+  stream.getTracks().forEach(track => track.stop());
+}
+
+// Start new recording from menu
+function startNewRecording() {
+  setupRecorder().then(startRecording);
+}
+
+// Playback toggle
+function togglePlayback() {
+  const playSection = document.getElementById('section-play');
+  if (!recordingUrl) return;
+
+  if (isPlaying) {
+    audioPlayer.pause();
+    playSection.classList.remove('playing');
+    isPlaying = false;
+  } else {
+    audioPlayer.play();
+    playSection.classList.add('playing');
+    isPlaying = true;
+    audioPlayer.onended = () => {
+      playSection.classList.remove('playing');
+      isPlaying = false;
+    };
+  }
+}
+
+// Save current recording
 function saveRecording() {
-    if (recordingUrl) {
-        const extension = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
-
-        try {
-            const link = document.createElement('a');
-            link.href = recordingUrl;
-            link.download = `recording_${Date.now()}.${extension}`;
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            statusDiv.textContent = "Saving... (check downloads)";
-            log("Download initiated");
-        } catch (e) {
-            statusDiv.textContent = "Long-press audio player to save";
-            log("Save error: " + e.message);
-        }
-    }
+  if (!recordingUrl) return;
+  const ext = mediaRecorder.mimeType.includes('mp4') ? 'mp4' : 'webm';
+  const a = document.createElement('a');
+  a.href = recordingUrl;
+  a.download = `recording_${Date.now()}.${ext}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
 }
 
-document.addEventListener('DOMContentLoaded', function () {
-    debugDiv.textContent = "";
-    init();
+// Handle main tap logic
+screen.addEventListener('click', () => {
+  if (screen.classList.contains('state-idle')) {
+    setupRecorder().then(startRecording);
+  } else if (screen.classList.contains('state-recording')) {
+    stopRecording();
+  }
 });
+
+// Initial state
+showIdle();
